@@ -1,0 +1,5 @@
+-= Read Me =-
+
+Here is a very simple calculator written for Adobe Flex 3. It is by no means a neat solution, but it is a good start point.
+
+To build you will need the free Flex 3 SDK from Adobe (http://www.adobe.com/products/flex/), to build just run mxmlc
