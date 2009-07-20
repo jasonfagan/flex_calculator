@@ -1,18 +1,29 @@
 <?xml version="1.0"?>
-<!-- Really Simple Calculator Application -->
-
 <mx:Application borderStyle="none"
                 xmlns:mx="http://www.adobe.com/2006/mxml"
+                creationPolicy="auto"
                 applicationComplete="init();">
 
     <mx:Script>
         <![CDATA[
             /*
-                Really Simple Calculator
-                
-                Programmer: Jason Fagan <jason.fagan@gmail.com>
+             Really Simple Flash Calculator
+             Copyright (C) 2009 Jason Fagan <jason.fagan@gmail.com>
 
+             This program is free software: you can redistribute it and/or modify
+             it under the terms of the GNU General Public License as published by
+             the Free Software Foundation, either version 3 of the License, or
+             (at your option) any later version.
+
+             This program is distributed in the hope that it will be useful,
+             but WITHOUT ANY WARRANTY; without even the implied warranty of
+             MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+             GNU General Public License for more details.
+
+             You should have received a copy of the GNU General Public License
+             along with this program.  If not, see <http://www.gnu.org/licenses/>.
             */
+
             private var regString1:String;
             private var regString2:String;
             private var reg1:Number;
@@ -27,16 +38,21 @@
                 regMem = 0.0;
                 regOp = "";
                 calculation.text = "0";
+                calculation.maxWidth = calculation.width;
                 isNewValue = true;
-    
-                stage.addEventListener(KeyboardEvent.KEY_UP, keyActionHandler, false, 1);               
+                    
+                stage.addEventListener(KeyboardEvent.KEY_UP, keyActionHandler, false, 1);
             }
-            
+
             private function keyActionHandler(event:KeyboardEvent):void {
                 var action:String;
-                
+
                 if (event.keyCode == Keyboard.BACKSPACE) {
                     action = "U";
+                } else if (event.keyCode == Keyboard.ENTER) {
+                    action = "=";
+                } else if (event.keyCode == Keyboard.ESCAPE) {
+                    action = "C";
                 } else {
                     action = String.fromCharCode(event.charCode).toUpperCase();
                 }
@@ -47,7 +63,7 @@
             private function performAction(action:String):void
             {
                 var regTemp:Number;
-                
+
                 if ("C" == action) { // Clear all
                     reg1 = 0.0;
                     reg2 = 0.0;
@@ -70,6 +86,12 @@
                        || "3" == action || "4" == action || "5" == action
                        || "6" == action || "7" == action || "8" == action
                        || "9" == action || "." == action) {
+
+                    // Restrict to 30 numbers
+                    if (!isNewValue && calculation.text.length >= 30) {
+                        return;
+                    }
+
                     if (isNewValue) {
                         regString2 = action;
                     } else {
@@ -92,7 +114,6 @@
                     regTemp = Number(regMem);
                     regString2 = String(regTemp);
                     calculation.text = regString2;
-                    regOp = "";
                     isNewValue = true;
                 } else if ("M+" == action) { // Memory Add
                     regString1 = calculation.text;
@@ -117,6 +138,14 @@
                 } else if ("MC" == action) {
                     regMem = 0;
                     isNewValue = true;
+                }
+
+                setMemStatus();
+            }
+
+            private function setMemStatus():void {
+                if (regMem != 0) {
+                } else {
                 }
             }
 
@@ -143,44 +172,47 @@
 	</mx:Script>
 
     <mx:Panel title="Calculator"
-              height="270"
-              width="270"
-              paddingTop="10"
-              paddingLeft="10"
-              paddingRight="10"
-              paddingBottom="10">
-
-        <mx:TextInput id="calculation"
-                      editable="false"
-                      textAlign="right"
-                      text=""
-                      width="100%"
-                      borderSkin="mx.skins.halo.HaloBorder"
-                      fontSize="14" />
+              titleIcon="@Embed('images/Calculator.png')"
+              height="265"
+              width="235"
+              paddingTop="5"
+              paddingLeft="5"
+              paddingRight="5"
+              paddingBottom="5">
 
         <mx:Grid>
             <mx:GridRow>
+                <mx:GridItem colSpan="4">
+                    <mx:TextInput id="calculation"
+                                  editable="false"
+                                  textAlign="right"
+                                  text=""
+                                  maxChars="30"
+                                  width="100%"
+                                  borderSkin="mx.skins.halo.HaloBorder"
+                                  fontSize="14"
+                                  fontWeight="bold" />
+                </mx:GridItem>
+		    </mx:GridRow>
+
+            <mx:GridRow>
                 <mx:GridItem>
                     <mx:Button label="MC"
-                               width="50"
                                click="performAction('MC');" />
                 </mx:GridItem>
 	
                 <mx:GridItem>
                     <mx:Button label="M+"
-                               width="50"
                                click="performAction('M+');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="M-"
-                               width="50"
                                click="performAction('M-');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="MR"
-                               width="50"
                                click="performAction('MR');" />
                 </mx:GridItem>
 
@@ -190,27 +222,23 @@
 	            <mx:GridItem>
                     <mx:Button label="C"
                                id="clear"
-                               width="50"
                                click="performAction('C');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="+/-"
-                               width="50"
                                click="performAction('F');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="&lt;--"
                                id="undo"
-                               width="50"
                                click="performAction('U')" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="/"
                                id="opDiv"
-                               width="50"
                                click="performAction('/');" />
                 </mx:GridItem>
             </mx:GridRow>
@@ -219,28 +247,24 @@
                 <mx:GridItem>
                     <mx:Button label="7"
                                id="num7"
-                               width="50"
                                click="performAction('7');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="8"
                                id="num8"
-                               width="50"
                                click="performAction('8');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="9"
                                id="num9"
-                               width="50"
                                click="performAction('9');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="X"
                                id="opMul"
-                               width="50"
                                click="performAction('*');" />
                 </mx:GridItem>
             </mx:GridRow>
@@ -249,28 +273,24 @@
                 <mx:GridItem>
                     <mx:Button label="4"
                                id="num4"
-                               width="50"
                                click="performAction('4');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="5"
                                id="num5"
-                               width="50"
                                click="performAction('5');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="6"
                                id="num6"
-                               width="50"
                                click="performAction('6');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="-"
                                id="opSub"
-                               width="50"
                                click="performAction('-');" />
                 </mx:GridItem>
             </mx:GridRow>
@@ -279,28 +299,24 @@
                 <mx:GridItem>
                     <mx:Button label="1"
                                id="num1"
-                               width="50"
                                click="performAction('1');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="2"
                                id="num2"
-                               width="50"
                                click="performAction('2');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="3"
                                id="num3"
-                               width="50"
                                click="performAction('3');" />
                 </mx:GridItem>
 
 				<mx:GridItem>
                     <mx:Button label="+"
                                id="opAdd"
-                               width="50"
                                click="performAction('+');" />
                 </mx:GridItem>
             </mx:GridRow>
@@ -309,25 +325,21 @@
                 <mx:GridItem>
                     <mx:Button label="0"
                                id="num0"
-                               width="50"
                                click="performAction('0');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="."
                                id="point"
-                               width="50"
                                click="performAction('.');" />
                 </mx:GridItem>
 
                 <mx:GridItem>
                     <mx:Button label="="
                                id="opEquals"
-                               width="50"
                                click="performAction('=');" />
                 </mx:GridItem>
             </mx:GridRow>
         </mx:Grid>
     </mx:Panel>
 </mx:Application>
-
