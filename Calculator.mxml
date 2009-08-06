@@ -63,7 +63,7 @@
                 if (!isNaN(answer) && isFinite(answer)) {
                     regDisplay = String(answer);
                 } else {
-                    calculation.text = getErrorText();
+                    regDisplay = getErrorText();
                     isError = true;
                 }
             }
