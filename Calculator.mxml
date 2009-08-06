@@ -2,7 +2,8 @@
 <mx:Application borderStyle="none"
                 xmlns:mx="http://www.adobe.com/2006/mxml"
                 creationPolicy="auto"
-                applicationComplete="init();">
+                applicationComplete="init();"
+                styleName="plain">
 
     <mx:Script>
         <![CDATA[
@@ -24,24 +25,47 @@
              along with this program.  If not, see <http://www.gnu.org/licenses/>.
             */
 
-            private var regString1:String;
-            private var regString2:String;
+            [Bindable]
+            private var regDisplay:String;
             private var reg1:Number;
             private var reg2:Number;
             private var regMem:Number;
             private var regOp:String;
             private var isNewValue:Boolean;
-            
+            private var isError:Boolean;
+
             private function init():void {
-                reg1 = 0.0;
-                reg2 = 0.0;
-                regMem = 0.0;
-                regOp = "";
-                calculation.text = "0";
+                clearAll();
+
                 calculation.maxWidth = calculation.width;
-                isNewValue = true;
                     
                 stage.addEventListener(KeyboardEvent.KEY_UP, keyActionHandler, false, 1);
+            }
+
+			private function getErrorText():String {
+				switch (Capabilities.language) {
+					case "de":
+						return "Fehler";
+						break;
+					case "fr":
+						return "Erreur";
+						break;
+					case "nl":
+						return "Fout";
+						break;
+					default:
+						return "Error";
+						break;
+				}
+			}
+
+            private function displayAnswer(answer:Number):void {
+                if (!isNaN(answer) && isFinite(answer)) {
+                    regDisplay = String(answer);
+                } else {
+                    regDisplay = getErrorText();
+                    isError = true;
+                }
             }
 
             private function keyActionHandler(event:KeyboardEvent):void {
@@ -60,27 +84,36 @@
                 performAction(action);
             }
             
+            private function clearAll():void
+            {
+                reg1 = 0.0;
+                reg2 = 0.0;
+                regMem = 0.0;
+                regOp = null;
+                displayAnswer(reg1);
+                isNewValue = true;
+                isError = false;
+            }
+
             private function performAction(action:String):void
             {
-                var regTemp:Number;
-
                 if ("C" == action) { // Clear all
-                    reg1 = 0.0;
-                    reg2 = 0.0;
-                    regOp = "";
-                    calculation.text = "0";
-                    isNewValue = true;
-                } else if ("U" == action) { // Undo
-                    calculation.text = calculation.text.substr(0, calculation.text.length - 1);
+                    clearAll();
+                }
+                
+                if (isError) return;
 
-                    if (calculation.text.length == 0) {
-                        calculation.text = "0";
+                if ("U" == action) { // Undo
+                    regDisplay = regDisplay.substr(0, regDisplay.length - 1);
+
+                    if (regDisplay.length == 0) {
+                        regDisplay = "0";
                     }
                 } else if ("F" == action) { // Flip sign
-                    if(calculation.text.substr(0, 1) == "-") {
-                        calculation.text = calculation.text.substr(1, calculation.text.length)
+                    if(regDisplay.substr(0, 1) == "-") {
+                        regDisplay = regDisplay.substr(1, regDisplay.length)
                     } else {
-                        calculation.text = "-" + calculation.text
+                        regDisplay = "-" + regDisplay
                     }
                 } else if ("0" == action || "1" == action || "2" == action
                        || "3" == action || "4" == action || "5" == action
@@ -88,50 +121,37 @@
                        || "9" == action || "." == action) {
 
                     // Restrict to 30 numbers
-                    if (!isNewValue && calculation.text.length >= 30) {
+                    if (!isNewValue && regDisplay.length >= 30) {
                         return;
                     }
 
                     if (isNewValue) {
-                        regString2 = action;
+                        regDisplay = action;
                     } else {
-                        regString2 = calculation.text + action;
+                        regDisplay = regDisplay + action;
                     }
                     
-                    calculation.text = regString2;
                     isNewValue = false;
                 } else if ("+" == action || "-" == action
-                       || "*" == action || "/"== action || "=" == action) { // Operand
-                    regString1 = calculation.text;
-                    reg2 = Number(regString1);
-                    reg1 = calculate(regOp, reg1, reg2);
-                    regTemp = reg1;
-                    regString2 = String(regTemp);
-                    calculation.text = regString2;
-                    regOp = action;
-                    isNewValue = true;
+                       || "*" == action || "/"== action || 
+						(regOp != null && "=" == action)) { // Operand
+							
+	                reg2 = Number(regDisplay);
+					reg1 = calculate(regOp, reg1, reg2);
+					regOp = "=" == action ? null : action;
+					isNewValue = true;
                 } else if ("MR" == action) { // Memory Read
-                    regTemp = Number(regMem);
-                    regString2 = String(regTemp);
-                    calculation.text = regString2;
+                    displayAnswer(regMem);
                     isNewValue = true;
                 } else if ("M+" == action) { // Memory Add
-                    regString1 = calculation.text;
-                    reg2 = Number(regString1);
+                    reg2 = Number(regDisplay);
                     reg1 = calculate(regOp, reg1, reg2);
-                    regTemp = Number(reg1);
-                    regString2 = String(regTemp);
-                    calculation.text = regString2;
                     regMem = regMem + reg1;
                     regOp = "";
                     isNewValue = true;
                 } else if ("M-" == action) { // Memory Subtract
-                    regString1 = calculation.text;
-                    reg2 = Number(regString1);
+                    reg2 = Number(regDisplay);
                     reg1 = calculate(regOp, reg1, reg2);
-                    regTemp = Number(reg1);
-                    regString2 = String(regTemp);
-                    calculation.text = regString2;
                     regMem = regMem - reg1;
                     regOp = "";
                     isNewValue = true;
@@ -151,6 +171,8 @@
 
             private function calculate(regOp:String, reg1:Number, reg2:Number):Number
             {
+				var answer:Number;
+				
                 if ("+" == regOp) {
                     reg1 = reg1 + reg2;
                 } else if ("-" == regOp) {
@@ -158,15 +180,21 @@
                 } else if ("*" == regOp) {
                     reg1 = reg1 * reg2;
                 } else if ("/" == regOp) {
+                    if (reg1 == 0 && reg2 == 0) {
+                        return 0;
+                    }
                     reg1 = reg1 / reg2;
                 } else { 
                     reg1 = reg2;
                 }
-                
+
                 // Deal with floating point errors using a precision of 12 (old trick)
                 var correction:Number = Math.pow(10, 12);
-				
-                return Math.round(correction * reg1) / correction;
+                answer = Math.round(correction * reg1) / correction;
+
+				displayAnswer(answer);
+                
+				return answer;
             }
         ]]>
 	</mx:Script>
@@ -186,7 +214,7 @@
                     <mx:TextInput id="calculation"
                                   editable="false"
                                   textAlign="right"
-                                  text=""
+                                  text="{regDisplay}"
                                   maxChars="30"
                                   width="100%"
                                   borderSkin="mx.skins.halo.HaloBorder"
