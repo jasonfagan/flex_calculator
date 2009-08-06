@@ -2,8 +2,7 @@
 <mx:Application borderStyle="none"
                 xmlns:mx="http://www.adobe.com/2006/mxml"
                 creationPolicy="auto"
-                applicationComplete="init();"
-                styleName="plain">
+                applicationComplete="init();">
 
     <mx:Script>
         <![CDATA[
