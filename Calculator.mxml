@@ -221,7 +221,7 @@
 	</mx:Script>
     
     <mx:Style>
-        Button { fontSize: 9px; }
+        Button { fontSize: 9pt; fontFamily: sans-serif; }
     </mx:Style>
 
     <mx:Panel title="Calculator"
