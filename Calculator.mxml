@@ -24,15 +24,16 @@
              You should have received a copy of the GNU General Public License
              along with this program.  If not, see <http://www.gnu.org/licenses/>.
             */
-
             [Bindable]
             private var regDisplay:String;
             private var reg1:Number;
             private var reg2:Number;
             private var regMem:Number;
             private var regOp:String;
+            private var regPOp:String;
             private var isNewValue:Boolean;
             private var isError:Boolean;
+            private var isOp:Boolean;
 
             private function init():void {
                 clearAll();
@@ -90,9 +91,11 @@
                 reg2 = 0.0;
                 regMem = 0.0;
                 regOp = null;
+                regPOp = null;
                 displayAnswer(reg1);
                 isNewValue = true;
                 isError = false;
+                isOp = false;
             }
 
             private function performAction(action:String):void
@@ -118,28 +121,29 @@
                 } else if ("0" == action || "1" == action || "2" == action
                        || "3" == action || "4" == action || "5" == action
                        || "6" == action || "7" == action || "8" == action
-                       || "9" == action || "." == action) {
-
-                    // Restrict to 30 numbers
-                    if (!isNewValue && regDisplay.length >= 30) {
+                       || "9" == action) {
+                    addDigit(action);
+                } else if ("." == action) {
+                    if (!isNewValue && regDisplay.indexOf(".") >= 0) {
                         return;
+                    } else {
+                        if (isNewValue) {
+                            action = "0" + action;
+                        }
                     }
 
-                    if (isNewValue) {
-                        regDisplay = action;
-                    } else {
-                        regDisplay = regDisplay + action;
-                    }
-                    
-                    isNewValue = false;
+                    addDigit(action);
                 } else if ("+" == action || "-" == action
                        || "*" == action || "/"== action || 
-						(regOp != null && "=" == action)) { // Operand
-							
-	                reg2 = Number(regDisplay);
-					reg1 = calculate(regOp, reg1, reg2);
-					regOp = "=" == action ? null : action;
-					isNewValue = true;
+						"=" == action) { // Operand
+                    if (!isOp || action == "=") {
+    	                reg2 = Number(regDisplay);
+	    				reg1 = calculate(regOp, reg1, reg2);
+	    				isNewValue = true;
+                    }
+
+    				regOp = action;
+                    isOp = action == "=" ? false : true;
                 } else if ("MR" == action) { // Memory Read
                     displayAnswer(regMem);
                     isNewValue = true;
@@ -161,6 +165,24 @@
                 }
 
                 setMemStatus();
+            }
+
+            private function addDigit(digit:String):void
+            {
+                isOp = false;
+
+                // Restrict to 30 numbers
+                if (!isNewValue && regDisplay.length >= 30) {
+                    return;
+                }
+
+                if (isNewValue) {
+                    regDisplay = digit;
+                } else {
+                    regDisplay = regDisplay + digit;
+                }
+                
+                isNewValue = false;
             }
 
             private function setMemStatus():void {
@@ -198,11 +220,15 @@
             }
         ]]>
 	</mx:Script>
+    
+    <mx:Style>
+        Button { fontSize: 9px; }
+    </mx:Style>
 
     <mx:Panel title="Calculator"
               titleIcon="@Embed('images/Calculator.png')"
-              height="265"
-              width="235"
+              height="250"
+              width="220"
               paddingTop="5"
               paddingLeft="5"
               paddingRight="5"
